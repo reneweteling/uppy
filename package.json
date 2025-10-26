@@ -5,22 +5,83 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "kill": "pkill -f \"tauri|uppy|vite\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "generate-icons": "node scripts/generate-icons.js",
+    "semantic-release": "semantic-release",
+    "prepare": "husky && echo \"pnpm --no -- commitlint --edit $1\" > .husky/commit-msg"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reneweteling/uppy.git"
+  },
+  "release": {
+    "branch": "main",
+    "repositoryUrl": "https://github.com/reneweteling/uppy.git",
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      [
+        "@semantic-release/exec",
+        {
+          "verifyReleaseCmd": "pnpm version ${nextRelease.version} --no-git-tag-version"
+        }
+      ],
+      [
+        "@semantic-release/github",
+        {
+          "assets": [
+            {
+              "path": "src-tauri/target/release/bundle/dmg/*.dmg",
+              "label": "Uppy v${nextRelease.version} - macOS DMG Package"
+            },
+            {
+              "path": "src-tauri/target/release/bundle/deb/*.deb",
+              "label": "Uppy v${nextRelease.version} - Linux DEB Package"
+            },
+            {
+              "path": "src-tauri/target/release/bundle/msi/*.msi",
+              "label": "Uppy v${nextRelease.version} - Windows MSI Package"
+            }
+          ]
+        }
+      ]
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
     "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2"
+    "@tauri-apps/plugin-clipboard-manager": "^2.3.1",
+    "@tauri-apps/plugin-notification": "^2.3.2",
+    "@tauri-apps/plugin-opener": "~2.5.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/npm": "^13.1.1",
+    "@tauri-apps/cli": "^2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "autoprefixer": "^10.4.21",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^9.1.7",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "semantic-release": "^25.0.1",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^3.4.18",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4",
-    "@tauri-apps/cli": "^2"
+    "vite": "^7.0.4"
   }
 }

@@ -8,3 +8,5 @@ When you open the app, you should be able to drag and drop files into it that st
 
 To start the server you can run `pnpm tauri dev` use the playwright MCP to view the contents.
 The AWS s3 credentials are in the path.
+
+Keep going until it works, looks nice, and you are free to add some features if you deem them functional
