@@ -89,12 +89,12 @@ jobs:
           - platform: macOS
             runs-on: macos-latest
             bundle: dmg
-          - platform: Linux
-            runs-on: ubuntu-latest
-            bundle: deb
-          - platform: Windows
-            runs-on: windows-latest
-            bundle: msi
+          # - platform: Linux
+          #   runs-on: ubuntu-latest
+          #   bundle: deb
+          # - platform: Windows
+          #   runs-on: windows-latest
+          #   bundle: msi
     steps:
       - name: Checkout
         uses: actions/checkout@v4
