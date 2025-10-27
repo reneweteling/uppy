@@ -33,14 +33,10 @@ struct AwsConfig {
 impl AwsConfig {
     fn new() -> Result<Self, String> {
         Ok(AwsConfig {
-            access_key: std::env::var("AWS_ACCESS_KEY_ID")
-                .map_err(|_| "AWS_ACCESS_KEY_ID not found")?,
-            secret_key: std::env::var("AWS_SECRET_ACCESS_KEY")
-                .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?,
-            region: std::env::var("AWS_REGION")
-                .map_err(|_| "AWS_REGION not found")?,
-            bucket: std::env::var("AWS_BUCKET")
-                .map_err(|_| "AWS_BUCKET not found")?,
+            access_key: env!("AWS_ACCESS_KEY_ID").to_string(),
+            secret_key: env!("AWS_SECRET_ACCESS_KEY").to_string(),
+            region: env!("AWS_REGION").to_string(),
+            bucket: env!("AWS_BUCKET").to_string(),
         })
     }
 }

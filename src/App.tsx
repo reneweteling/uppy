@@ -681,15 +681,6 @@ function App() {
             <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">
               Uppy S3 Uploader
             </h1>
-            {appInfo ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                v{appInfo.version} • {appInfo.bucket}
-              </p>
-            ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Loading app info...
-              </p>
-            )}
           </div>
 
           {/* Upload Area */}
