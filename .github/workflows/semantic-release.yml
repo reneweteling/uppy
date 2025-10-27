@@ -78,11 +78,6 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     needs: version
     environment: production
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
     strategy:
       matrix:
         include:
@@ -207,8 +202,10 @@ jobs:
       - name: Build ${{ matrix.platform }}
         run: pnpm tauri build --bundles ${{ matrix.bundle }}
         env:
-          CARGO_INCREMENTAL: 1
-          CARGO_PROFILE_RELEASE_DEBUG: 1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
 
       - name: Upload ${{ matrix.platform }} artifacts
         uses: actions/upload-artifact@v4
