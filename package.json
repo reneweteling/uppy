@@ -33,7 +33,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "echo 'Updating version numbers...' && sed -i '' '2s/version = \".*\"/version = \"${nextRelease.version}\"/' src-tauri/Cargo.toml && sed -i '' '4s/\"version\": \".*\"/\"version\": \"${nextRelease.version}\"/' src-tauri/tauri.conf.json && sed -i '' '4s/\"version\": \".*\"/\"version\": \"${nextRelease.version}\"/' package.json"
+          "prepareCmd": "echo 'Updating version numbers....' && sed -i '' '2s/version = \".*\"/version = \"${nextRelease.version}\"/' src-tauri/Cargo.toml && sed -i '' '4s/\"version\": \".*\"/\"version\": \"${nextRelease.version}\"/' src-tauri/tauri.conf.json && sed -i '' '4s/\"version\": \".*\"/\"version\": \"${nextRelease.version}\"/' package.json"
         }
       ],
       [
