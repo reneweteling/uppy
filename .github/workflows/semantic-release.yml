@@ -302,6 +302,11 @@ jobs:
           echo "Final assets:"
           find src-tauri/target/release/bundle -name "*.dmg" -o -name "*.deb" -o -name "*.msi" 2>/dev/null || echo "No final assets found"
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Run semantic-release
         run: pnpm semantic-release
 
