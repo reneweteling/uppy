@@ -173,13 +173,8 @@ jobs:
           echo "Dependencies pre-compiled successfully"
 
       - name: Clear old builds
-        run: |
-          if [ "${{ matrix.platform }}" = "Windows" ]; then
-            # Use PowerShell for more reliable Windows folder deletion
-            powershell -Command "if (Test-Path 'src-tauri\target\release\bundle\${{ matrix.bundle }}') { Remove-Item -Recurse -Force 'src-tauri\target\release\bundle\${{ matrix.bundle }}' }"
-          else
-            rm -rf src-tauri/target/release/bundle/${{ matrix.bundle }}/
-          fi
+        run: rm -rf src-tauri/target/release/bundle/${{ matrix.bundle }}/
+        shell: bash
 
       - name: Update version numbers
         id: version
