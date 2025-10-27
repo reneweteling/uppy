@@ -40,6 +40,7 @@ For the best development experience, we recommend:
 - **[direnv](https://direnv.net/)** - Automatic environment variable management
 
 **Quick setup:**
+
 ```bash
 asdf install    # Install required versions
 direnv allow    # Allow environment variables
@@ -48,6 +49,7 @@ direnv allow    # Allow environment variables
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/reneweteling/uppy.git
    cd uppy
@@ -55,6 +57,7 @@ direnv allow    # Allow environment variables
 
 2. **Set up environment variables**
    Create a `.envrc` file in the project root:
+
    ```bash
    export AWS_ACCESS_KEY_ID="your-access-key"
    export AWS_SECRET_ACCESS_KEY="your-secret-key"
@@ -77,11 +80,13 @@ pnpm tauri build
 ```
 
 ### Generate icons
+
 ```bash
 pnpm generate-icons
 ```
 
 The built applications will be available in `src-tauri/target/release/bundle/`:
+
 - **macOS**: `.dmg` package
 - **Windows**: `.msi` installer
 - **Linux**: `.deb` package
@@ -90,12 +95,12 @@ The built applications will be available in `src-tauri/target/release/bundle/`:
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AWS_ACCESS_KEY_ID` | AWS access key | Required |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key | Required |
-| `AWS_REGION` | AWS region | `eu-west-1` |
-| `AWS_BUCKET` | S3 bucket name | `uppy.weteling.com` |
+| Variable                | Description    | Default             |
+| ----------------------- | -------------- | ------------------- |
+| `AWS_ACCESS_KEY_ID`     | AWS access key | Required            |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key | Required            |
+| `AWS_REGION`            | AWS region     | `eu-west-1`         |
+| `AWS_BUCKET`            | S3 bucket name | `uppy.weteling.com` |
 
 ### Tauri Configuration
 
@@ -121,7 +126,7 @@ The app window can be customized in `src-tauri/tauri.conf.json`:
 ### Upload Process
 
 1. **File Selection**: Drag & drop or click to select files
-2. **Upload Strategy**: 
+2. **Upload Strategy**:
    - Files ≤5MB: Direct upload via presigned POST
    - Files >5MB: Multipart upload with 5MB chunks
 3. **Progress Tracking**: Real-time progress with speed/time estimates
@@ -159,14 +164,24 @@ The app window can be customized in `src-tauri/tauri.conf.json`:
 
 ## 📝 Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start Vite dev server |
-| `pnpm tauri dev` | Run Tauri in development mode |
-| `pnpm build` | Build frontend for production |
-| `pnpm tauri build` | Build complete application |
-| `pnpm generate-icons` | Generate app icons |
-| `pnpm kill` | Kill all running processes |
+| Command               | Description                   |
+| --------------------- | ----------------------------- |
+| `pnpm dev`            | Start Vite dev server         |
+| `pnpm tauri dev`      | Run Tauri in development mode |
+| `pnpm build`          | Build frontend for production |
+| `pnpm tauri build`    | Build complete application    |
+| `pnpm generate-icons` | Generate app icons            |
+| `pnpm kill`           | Kill all running processes    |
+
+## 📥 Download
+
+**Ready-to-use applications are available in the [Releases](https://github.com/reneweteling/uppy/releases) section.**
+
+Download the latest version for your platform:
+
+- **macOS**: `.dmg` package
+- **Windows**: `.msi` installer
+- **Linux**: `.deb` package
 
 ## 🐛 Troubleshooting
 
@@ -187,5 +202,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [React](https://reactjs.org/) and [Tailwind CSS](https://tailwindcss.com/) for the UI
 
 ---
+
 ![Background](https://weteling.com/zzz/bg-300.png)
 **Made with ❤️ by [René Weteling](https://github.com/reneweteling)**
