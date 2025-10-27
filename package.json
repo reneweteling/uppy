@@ -1,7 +1,7 @@
 {
   "name": "uppy",
   "private": true,
-  "version": "1.0.5",
+  "version": "1.0.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -27,7 +27,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "node scripts/update-versions.js ${nextRelease.version}"
+          "verifyReleaseCmd": "node scripts/update-versions.js ${nextRelease.version}"
         }
       ],
       [
