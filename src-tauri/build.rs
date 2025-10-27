@@ -11,11 +11,8 @@ fn main() {
         if std::env::var(var).is_err() {
             panic!("Required environment variable {} is not set. Please set it before building.", var);
         }
+        println!("cargo:rustc-env={}={}", var, std::env::var(var).unwrap());
     }
-
-    println!("cargo:rustc-env=AWS_ACCESS_KEY_ID={}", std::env::var("AWS_ACCESS_KEY_ID").unwrap());
-    println!("cargo:rustc-env=AWS_REGION={}", std::env::var("AWS_REGION").unwrap());
-    println!("cargo:rustc-env=AWS_BUCKET={}", std::env::var("AWS_BUCKET").unwrap());
 
     tauri_build::build()
 }
