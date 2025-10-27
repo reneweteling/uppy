@@ -22,19 +22,42 @@ struct FileInfo {
     url: String,
 }
 
+#[derive(Clone)]
+struct AwsConfig {
+    access_key: String,
+    secret_key: String,
+    region: String,
+    bucket: String,
+}
+
+impl AwsConfig {
+    fn new() -> Result<Self, String> {
+        Ok(AwsConfig {
+            access_key: std::env::var("AWS_ACCESS_KEY_ID")
+                .map_err(|_| "AWS_ACCESS_KEY_ID not found")?,
+            secret_key: std::env::var("AWS_SECRET_ACCESS_KEY")
+                .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?,
+            region: std::env::var("AWS_REGION")
+                .map_err(|_| "AWS_REGION not found")?,
+            bucket: std::env::var("AWS_BUCKET")
+                .map_err(|_| "AWS_BUCKET not found")?,
+        })
+    }
+}
+
+#[tauri::command]
+async fn get_app_info() -> Result<(String, String), String> {
+    let aws_config = AwsConfig::new()?;
+    let version = env!("CARGO_PKG_VERSION").to_string();
+    Ok((version, aws_config.bucket))
+}
+
 #[tauri::command]
 async fn generate_presigned_post(
     filename: String,
     content_type: String,
 ) -> Result<PresignedPostResponse, String> {
-    let aws_access_key = std::env::var("AWS_ACCESS_KEY_ID")
-        .map_err(|_| "AWS_ACCESS_KEY_ID not found")?;
-    let aws_secret_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-        .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?;
-    let aws_region = std::env::var("AWS_REGION")
-        .unwrap_or_else(|_| "eu-west-1".to_string());
-    let bucket = std::env::var("AWS_BUCKET")
-        .unwrap_or_else(|_| "uppy.weteling.com".to_string());
+    let aws_config = AwsConfig::new()?;
 
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -43,8 +66,8 @@ async fn generate_presigned_post(
     let key = format!("{}_{}", timestamp, filename);
 
     let config = aws_config::defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_region.clone()))
-        .credentials_provider(S3Credentials::new(&aws_access_key, &aws_secret_key, None, None, "uppy"))
+        .region(Region::new(aws_config.region.clone()))
+        .credentials_provider(S3Credentials::new(&aws_config.access_key, &aws_config.secret_key, None, None, "uppy"))
         .load()
         .await;
 
@@ -54,7 +77,7 @@ async fn generate_presigned_post(
 
     let presigned_request = client
         .put_object()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .key(&key)
         .content_type(&content_type)
         .presigned(presigning_config)
@@ -65,7 +88,7 @@ async fn generate_presigned_post(
     fields.insert("key".to_string(), key.clone());
     fields.insert("Content-Type".to_string(), content_type);
 
-    let file_url = format!("https://s3.{}.amazonaws.com/{}/{}", aws_region, bucket, key);
+    let file_url = format!("https://s3.{}.amazonaws.com/{}/{}", aws_config.region, aws_config.bucket, key);
 
     Ok(PresignedPostResponse {
         url: presigned_request.uri().to_string(),
@@ -77,18 +100,11 @@ async fn generate_presigned_post(
 
 #[tauri::command]
 async fn list_uploaded_files() -> Result<Vec<FileInfo>, String> {
-    let aws_access_key = std::env::var("AWS_ACCESS_KEY_ID")
-        .map_err(|_| "AWS_ACCESS_KEY_ID not found")?;
-    let aws_secret_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-        .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?;
-    let aws_region = std::env::var("AWS_REGION")
-        .unwrap_or_else(|_| "eu-west-1".to_string());
-    let bucket = std::env::var("AWS_BUCKET")
-        .unwrap_or_else(|_| "uppy.weteling.com".to_string());
+    let aws_config = AwsConfig::new()?;
 
     let config = aws_config::defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_region.clone()))
-        .credentials_provider(S3Credentials::new(&aws_access_key, &aws_secret_key, None, None, "uppy"))
+        .region(Region::new(aws_config.region.clone()))
+        .credentials_provider(S3Credentials::new(&aws_config.access_key, &aws_config.secret_key, None, None, "uppy"))
         .load()
         .await;
 
@@ -96,7 +112,7 @@ async fn list_uploaded_files() -> Result<Vec<FileInfo>, String> {
 
     let list_objects_output = client
         .list_objects_v2()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .send()
         .await
         .map_err(|e| format!("Failed to list objects: {}", e))?;
@@ -110,7 +126,7 @@ async fn list_uploaded_files() -> Result<Vec<FileInfo>, String> {
             let last_modified = object.last_modified()
                 .map(|t| t.to_string())
                 .unwrap_or_else(|| "Unknown".to_string());
-            let url = format!("https://s3.{}.amazonaws.com/{}/{}", aws_region, bucket, key);
+            let url = format!("https://s3.{}.amazonaws.com/{}/{}", aws_config.region, aws_config.bucket, key);
 
             files.push(FileInfo {
                 key: key.to_string(),
@@ -128,18 +144,11 @@ async fn list_uploaded_files() -> Result<Vec<FileInfo>, String> {
 
 #[tauri::command]
 async fn delete_file(key: String) -> Result<(), String> {
-    let aws_access_key = std::env::var("AWS_ACCESS_KEY_ID")
-        .map_err(|_| "AWS_ACCESS_KEY_ID not found")?;
-    let aws_secret_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-        .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?;
-    let aws_region = std::env::var("AWS_REGION")
-        .unwrap_or_else(|_| "eu-west-1".to_string());
-    let bucket = std::env::var("AWS_BUCKET")
-        .unwrap_or_else(|_| "uppy.weteling.com".to_string());
+    let aws_config = AwsConfig::new()?;
 
     let config = aws_config::defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_region.clone()))
-        .credentials_provider(S3Credentials::new(&aws_access_key, &aws_secret_key, None, None, "uppy"))
+        .region(Region::new(aws_config.region.clone()))
+        .credentials_provider(S3Credentials::new(&aws_config.access_key, &aws_config.secret_key, None, None, "uppy"))
         .load()
         .await;
 
@@ -147,7 +156,7 @@ async fn delete_file(key: String) -> Result<(), String> {
 
     client
         .delete_object()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .key(&key)
         .send()
         .await
@@ -158,27 +167,20 @@ async fn delete_file(key: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn rename_file(old_key: String, new_key: String) -> Result<(), String> {
-    let aws_access_key = std::env::var("AWS_ACCESS_KEY_ID")
-        .map_err(|_| "AWS_ACCESS_KEY_ID not found")?;
-    let aws_secret_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-        .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?;
-    let aws_region = std::env::var("AWS_REGION")
-        .unwrap_or_else(|_| "eu-west-1".to_string());
-    let bucket = std::env::var("AWS_BUCKET")
-        .unwrap_or_else(|_| "uppy.weteling.com".to_string());
+    let aws_config = AwsConfig::new()?;
 
     let config = aws_config::defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_region.clone()))
-        .credentials_provider(S3Credentials::new(&aws_access_key, &aws_secret_key, None, None, "uppy"))
+        .region(Region::new(aws_config.region.clone()))
+        .credentials_provider(S3Credentials::new(&aws_config.access_key, &aws_config.secret_key, None, None, "uppy"))
         .load()
         .await;
 
     let client = S3Client::new(&config);
 
-    let copy_source = format!("{}/{}", bucket, old_key);
+    let copy_source = format!("{}/{}", aws_config.bucket, old_key);
     client
         .copy_object()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .copy_source(copy_source)
         .key(&new_key)
         .acl(aws_sdk_s3::types::ObjectCannedAcl::PublicRead) // Preserve public read ACL
@@ -188,7 +190,7 @@ async fn rename_file(old_key: String, new_key: String) -> Result<(), String> {
 
     client
         .delete_object()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .key(&old_key)
         .send()
         .await
@@ -199,18 +201,11 @@ async fn rename_file(old_key: String, new_key: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn set_object_acl(key: String) -> Result<(), String> {
-    let aws_access_key = std::env::var("AWS_ACCESS_KEY_ID")
-        .map_err(|_| "AWS_ACCESS_KEY_ID not found")?;
-    let aws_secret_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-        .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?;
-    let aws_region = std::env::var("AWS_REGION")
-        .unwrap_or_else(|_| "eu-west-1".to_string());
-    let bucket = std::env::var("AWS_BUCKET")
-        .unwrap_or_else(|_| "uppy.weteling.com".to_string());
+    let aws_config = AwsConfig::new()?;
 
     let config = aws_config::defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_region.clone()))
-        .credentials_provider(S3Credentials::new(&aws_access_key, &aws_secret_key, None, None, "uppy"))
+        .region(Region::new(aws_config.region.clone()))
+        .credentials_provider(S3Credentials::new(&aws_config.access_key, &aws_config.secret_key, None, None, "uppy"))
         .load()
         .await;
 
@@ -218,7 +213,7 @@ async fn set_object_acl(key: String) -> Result<(), String> {
 
     client
         .put_object_acl()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .key(&key)
         .acl(aws_sdk_s3::types::ObjectCannedAcl::PublicRead)
         .send()
@@ -234,19 +229,12 @@ async fn copy_to_clipboard(_text: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn initiate_multipart_upload(filename: String, contentType: String) -> Result<(String, String), String> {
-    let aws_access_key = std::env::var("AWS_ACCESS_KEY_ID")
-        .map_err(|_| "AWS_ACCESS_KEY_ID not found")?;
-    let aws_secret_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-        .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?;
-    let aws_region = std::env::var("AWS_REGION")
-        .unwrap_or_else(|_| "eu-west-1".to_string());
-    let bucket = std::env::var("AWS_BUCKET")
-        .unwrap_or_else(|_| "uppy.weteling.com".to_string());
+async fn initiate_multipart_upload(filename: String, content_type: String) -> Result<(String, String), String> {
+    let aws_config = AwsConfig::new()?;
 
     let config = aws_config::defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_region.clone()))
-        .credentials_provider(S3Credentials::new(&aws_access_key, &aws_secret_key, None, None, "uppy"))
+        .region(Region::new(aws_config.region.clone()))
+        .credentials_provider(S3Credentials::new(&aws_config.access_key, &aws_config.secret_key, None, None, "uppy"))
         .load()
         .await;
 
@@ -261,9 +249,9 @@ async fn initiate_multipart_upload(filename: String, contentType: String) -> Res
 
     let response = client
         .create_multipart_upload()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .key(&key)
-        .content_type(&contentType)
+        .content_type(&content_type)
         .send()
         .await
         .map_err(|e| format!("Failed to initiate multipart upload: {}", e))?;
@@ -273,22 +261,15 @@ async fn initiate_multipart_upload(filename: String, contentType: String) -> Res
 
 #[tauri::command]
 async fn generate_presigned_url_for_part(
-    uploadId: String,
-    partNumber: i32,
+    upload_id: String,
+    part_number: i32,
     key: String,
 ) -> Result<String, String> {
-    let aws_access_key = std::env::var("AWS_ACCESS_KEY_ID")
-        .map_err(|_| "AWS_ACCESS_KEY_ID not found")?;
-    let aws_secret_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-        .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?;
-    let aws_region = std::env::var("AWS_REGION")
-        .unwrap_or_else(|_| "eu-west-1".to_string());
-    let bucket = std::env::var("AWS_BUCKET")
-        .unwrap_or_else(|_| "uppy.weteling.com".to_string());
+    let aws_config = AwsConfig::new()?;
 
     let config = aws_config::defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_region.clone()))
-        .credentials_provider(S3Credentials::new(&aws_access_key, &aws_secret_key, None, None, "uppy"))
+        .region(Region::new(aws_config.region.clone()))
+        .credentials_provider(S3Credentials::new(&aws_config.access_key, &aws_config.secret_key, None, None, "uppy"))
         .load()
         .await;
 
@@ -296,10 +277,10 @@ async fn generate_presigned_url_for_part(
 
     let presigned_request = client
         .upload_part()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .key(&key)
-        .upload_id(&uploadId)
-        .part_number(partNumber)
+        .upload_id(&upload_id)
+        .part_number(part_number)
         .presigned(PresigningConfig::expires_in(Duration::from_secs(3600)).unwrap())
         .await
         .map_err(|e| format!("Failed to create presigned URL for part: {}", e))?;
@@ -309,22 +290,15 @@ async fn generate_presigned_url_for_part(
 
 #[tauri::command]
 async fn complete_multipart_upload(
-    uploadId: String,
+    upload_id: String,
     key: String,
     parts: Vec<(i32, String)>, // (part_number, etag)
 ) -> Result<String, String> {
-    let aws_access_key = std::env::var("AWS_ACCESS_KEY_ID")
-        .map_err(|_| "AWS_ACCESS_KEY_ID not found")?;
-    let aws_secret_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-        .map_err(|_| "AWS_SECRET_ACCESS_KEY not found")?;
-    let aws_region = std::env::var("AWS_REGION")
-        .unwrap_or_else(|_| "eu-west-1".to_string());
-    let bucket = std::env::var("AWS_BUCKET")
-        .unwrap_or_else(|_| "uppy.weteling.com".to_string());
+    let aws_config = AwsConfig::new()?;
 
     let config = aws_config::defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_region.clone()))
-        .credentials_provider(S3Credentials::new(&aws_access_key, &aws_secret_key, None, None, "uppy"))
+        .region(Region::new(aws_config.region.clone()))
+        .credentials_provider(S3Credentials::new(&aws_config.access_key, &aws_config.secret_key, None, None, "uppy"))
         .load()
         .await;
 
@@ -345,11 +319,11 @@ async fn complete_multipart_upload(
         .set_parts(Some(completed_parts))
         .build();
 
-    let response = client
+    let _response = client
         .complete_multipart_upload()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .key(&key)
-        .upload_id(&uploadId)
+        .upload_id(&upload_id)
         .multipart_upload(completed_multipart_upload)
         .send()
         .await
@@ -358,14 +332,14 @@ async fn complete_multipart_upload(
     // Set ACL to public read
     client
         .put_object_acl()
-        .bucket(&bucket)
+        .bucket(&aws_config.bucket)
         .key(&key)
         .acl(aws_sdk_s3::types::ObjectCannedAcl::PublicRead)
         .send()
         .await
         .map_err(|e| format!("Failed to set object ACL: {}", e))?;
 
-    let file_url = format!("https://s3.{}.amazonaws.com/{}/{}", aws_region, bucket, key);
+    let file_url = format!("https://s3.{}.amazonaws.com/{}/{}", aws_config.region, aws_config.bucket, key);
     Ok(file_url)
 }
 
@@ -376,6 +350,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .invoke_handler(tauri::generate_handler![
+            get_app_info,
             generate_presigned_post,
             list_uploaded_files,
             delete_file,

@@ -310,6 +310,7 @@ jobs:
 
       - name: Create PR to merge main into develop
         if: success()
+        continue-on-error: true
         run: |
           gh pr create \
             --base develop \

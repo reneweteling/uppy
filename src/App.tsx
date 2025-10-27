@@ -68,12 +68,25 @@ function App() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [appInfo, setAppInfo] = useState<{ version: string; bucket: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load files on mount
+  // Load files and app info on mount
   useEffect(() => {
     loadFiles();
+    loadAppInfo();
   }, []);
+
+  const loadAppInfo = async () => {
+    try {
+      if (isTauri) {
+        const [version, bucket] = await invoke<[string, string]>("get_app_info");
+        setAppInfo({ version, bucket });
+      }
+    } catch (error) {
+      console.error("Failed to load app info:", error);
+    }
+  };
 
   // Add global drag event listeners
   useEffect(() => {
@@ -980,6 +993,17 @@ function App() {
             </>
           )}
         </div>
+
+        {/* Footer */}
+        {appInfo && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-2 px-4">
+            <div className="container mx-auto max-w-6xl flex justify-center">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                v{appInfo.version} • {appInfo.bucket}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
