@@ -173,7 +173,7 @@ jobs:
           echo "Dependencies pre-compiled successfully"
 
       - name: Clear old builds
-        run: rm -rf src-tauri/target/release/bundle/${{ matrix.bundle }}/.*
+        run: rm -rf src-tauri/target/release/bundle/${{ matrix.bundle }}/
 
       - name: Update version numbers
         id: version
