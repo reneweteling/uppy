@@ -308,6 +308,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run semantic-release
+        shell: bash
         run: pnpm semantic-release
 
       - name: Create PR to merge main into develop
