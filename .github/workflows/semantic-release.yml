@@ -158,6 +158,10 @@ jobs:
         shell: bash
         run: pnpm install --frozen-lockfile
 
+      - name: Set version
+        shell: bash
+        run: node scripts/update-versions.js ${{ needs.version.outputs.version }}
+
       - name: Pre-compile Rust dependencies (Windows only)
         if: matrix.platform == 'Windows'
         shell: bash
