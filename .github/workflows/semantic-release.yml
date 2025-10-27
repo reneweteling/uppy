@@ -172,6 +172,9 @@ jobs:
           cargo check --release
           echo "Dependencies pre-compiled successfully"
 
+      - name: Clear old builds
+        run: rm -rf src-tauri/target/release/bundle/${{ matrix.bundle }}/.*
+
       - name: Update version numbers
         id: version
         shell: bash
@@ -211,7 +214,7 @@ jobs:
         with:
           name: uppy-${{ matrix.platform }}-v${{ needs.version.outputs.version }}
           path: |
-            src-tauri/target/release/bundle/${{ matrix.bundle }}/*
+            src-tauri/target/release/bundle/${{ matrix.bundle }}/*.${{ matrix.bundle }}
           retention-days: 1
 
   release:
